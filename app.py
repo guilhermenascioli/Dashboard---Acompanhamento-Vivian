@@ -142,7 +142,7 @@ def brl(v: float) -> str:
 def carregar_dados(url: str) -> pd.DataFrame:
     df = pd.read_csv(url)
     df.columns = [str(c).strip().lower() for c in df.columns]
-    for col in ["data", "nome", "sexo", "idade", "procedimento", "valor"]:
+    for col in ["data", "nome", "sexo", "idade", "Procedimento", "valor"]:
         if col not in df.columns:
             df[col] = None
     # Aceita AAAA-MM-DD (ISO, sem dayfirst) e DD/MM/AAAA (br, com dayfirst)
@@ -159,7 +159,7 @@ def carregar_dados(url: str) -> pd.DataFrame:
         .str.strip()
     )
     df["valor"] = pd.to_numeric(df["valor"], errors="coerce").fillna(0)
-    for col in ["sexo", "idade", "tipo"]:
+    for col in ["sexo", "idade", "Procedimento"]:
         df[col] = df[col].astype(str).str.strip().str.lower()
     return df.dropna(subset=["data"])
 
@@ -339,9 +339,9 @@ if aba_sel == "📅 Mensal":
 
     with g3:
         st.markdown("### Mix de servicos")
-        por_tipo = dfm.groupby("tipo", as_index=False)["valor"].sum()
-        if not por_tipo.empty:
-            rosca = px.pie(por_tipo, names="tipo", values="valor", hole=0.55,
+        por_Procedimento = dfm.groupby("Procedimento", as_index=False)["valor"].sum()
+        if not por_Procedimento.empty:
+            rosca = px.pie(por_Procedimento, names="Procedimento", values="valor", hole=0.55,
                            color_discrete_sequence=SEQ)
             rosca.update_traces(textinfo="percent+label", textfont_size=12,
                                 textfont_color=MARROM_ESC,
@@ -359,7 +359,7 @@ if aba_sel == "📅 Mensal":
     st.markdown("### 📋 Atendimentos do mes")
 
     # Prepara copia limpa para exibir
-    dfm_tab = dfm[["data", "nome", "sexo", "idade", "tipo", "valor"]].copy()
+    dfm_tab = dfm[["data", "nome", "sexo", "idade", "Procedimento", "valor"]].copy()
     dfm_tab["data"] = dfm_tab["data"].dt.strftime("%d/%m/%Y")
     dfm_tab["valor_fmt"] = dfm_tab["valor"].apply(brl)
 
@@ -372,8 +372,8 @@ if aba_sel == "📅 Mensal":
         idades = ["Todos"] + sorted(dfm_tab["idade"].dropna().unique().tolist())
         f_idade = st.selectbox("Faixa etaria", idades, key="tab_idade")
     with fc3:
-        tipos = ["Todos"] + sorted(dfm_tab["tipo"].dropna().unique().tolist())
-        f_tipo = st.selectbox("Tipo de servico", tipos, key="tab_tipo")
+        Procedimentos = ["Todos"] + sorted(dfm_tab["Procedimento"].dropna().unique().tolist())
+        f_Procedimento = st.selectbox("Procedimento de servico", Procedimentos, key="tab_Procedimento")
     with fc4:
         nomes = ["Todos"] + sorted(dfm_tab["nome"].dropna().unique().tolist())
         f_nome = st.selectbox("Cliente", nomes, key="tab_nome")
@@ -384,17 +384,17 @@ if aba_sel == "📅 Mensal":
         df_filtrado = df_filtrado[df_filtrado["sexo"] == f_sexo]
     if f_idade != "Todos":
         df_filtrado = df_filtrado[df_filtrado["idade"] == f_idade]
-    if f_tipo != "Todos":
-        df_filtrado = df_filtrado[df_filtrado["tipo"] == f_tipo]
+    if f_Procedimento != "Todos":
+        df_filtrado = df_filtrado[df_filtrado["Procedimento"] == f_Procedimento]
     if f_nome != "Todos":
         df_filtrado = df_filtrado[df_filtrado["nome"] == f_nome]
 
-    df_exibir = df_filtrado[["data", "nome", "sexo", "idade", "tipo", "valor_fmt"]].rename(columns={
+    df_exibir = df_filtrado[["data", "nome", "sexo", "idade", "Procedimento", "valor_fmt"]].rename(columns={
         "data": "Data",
         "nome": "Cliente",
         "sexo": "Sexo",
         "idade": "Faixa Etaria",
-        "tipo": "Servico",
+        "Procedimento": "Servico",
         "valor_fmt": "Valor",
     }).reset_index(drop=True)
 
@@ -561,15 +561,15 @@ else:
                         config={"displayModeBar": False})
 
     with r2b:
-        st.markdown("### Faturamento por tipo de servico")
-        fat_tipo = (dfa.groupby("tipo")["valor"]
+        st.markdown("### Faturamento por Procedimento de servico")
+        fat_Procedimento = (dfa.groupby("Procedimento")["valor"]
                     .sum().reset_index().sort_values("valor", ascending=True))
-        fig_fat_tipo = px.bar(fat_tipo, x="valor", y="tipo", orientation="h",
+        fig_fat_Procedimento = px.bar(fat_Procedimento, x="valor", y="Procedimento", orientation="h",
                               color_discrete_sequence=[MARROM])
-        fig_fat_tipo.update_traces(marker_line_color=MARROM_ESC, marker_line_width=1,
-                                   text=fat_tipo["valor"].apply(brl), textposition="outside",
+        fig_fat_Procedimento.update_traces(marker_line_color=MARROM_ESC, marker_line_width=1,
+                                   text=fat_Procedimento["valor"].apply(brl), textposition="outside",
                                    textfont=dict(color="#2C1A08", size=11))
-        st.plotly_chart(layout_plotly(fig_fat_tipo, 300), use_container_width=True,
+        st.plotly_chart(layout_plotly(fig_fat_Procedimento, 300), use_container_width=True,
                         config={"displayModeBar": False})
 
     st.write("")
@@ -578,10 +578,10 @@ else:
 
     with r3a:
         st.markdown("### Faturamento por servico ao longo do ano")
-        fat_tipo_mes = (dfa.groupby([dfa["data"].dt.to_period("M"), "tipo"])["valor"]
+        fat_Procedimento_mes = (dfa.groupby([dfa["data"].dt.to_period("M"), "Procedimento"])["valor"]
                         .sum().reset_index())
-        fat_tipo_mes["mes_label"] = fat_tipo_mes["data"].dt.strftime("%b/%y")
-        fig_stk = px.bar(fat_tipo_mes, x="mes_label", y="valor", color="tipo",
+        fat_Procedimento_mes["mes_label"] = fat_Procedimento_mes["data"].dt.strftime("%b/%y")
+        fig_stk = px.bar(fat_Procedimento_mes, x="mes_label", y="valor", color="Procedimento",
                          barmode="stack", color_discrete_sequence=SEQ)
         fig_stk.update_traces(marker_line_color=CREME, marker_line_width=0.5,
                               texttemplate="%{value:,.0f}", textposition="inside",
@@ -591,8 +591,8 @@ else:
 
     with r3b:
         st.markdown("### Mix anual de servicos")
-        mix_anual = dfa.groupby("tipo", as_index=False)["valor"].sum()
-        rosca_anual = px.pie(mix_anual, names="tipo", values="valor", hole=0.55,
+        mix_anual = dfa.groupby("Procedimento", as_index=False)["valor"].sum()
+        rosca_anual = px.pie(mix_anual, names="Procedimento", values="valor", hole=0.55,
                              color_discrete_sequence=SEQ)
         rosca_anual.update_traces(textinfo="label+value", textfont_size=12,
                                   textfont_color=MARROM_ESC,
