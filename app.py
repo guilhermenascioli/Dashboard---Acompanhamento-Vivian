@@ -302,7 +302,24 @@ if aba_sel == "📅 Mensal":
         ))
         st.plotly_chart(layout_plotly(gauge, 280), use_container_width=True,
                         config={"displayModeBar": False})
-        st.caption(f"Faltam {brl(max(meta - faturamento, 0))} para a meta de {brl(meta)}")
+        faltam = max(meta - faturamento, 0)
+
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#5C4033;
+                color:#FFF8B0;
+                padding:12px;
+                border-radius:10px;
+                font-size:16px;
+                font-weight:600;
+                text-align:center;
+            ">
+                🎯 Faltam {brl(faltam)} para atingir a meta de {brl(meta)}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         
     with g2:
         st.markdown("### Receita acumulada no mes")
