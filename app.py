@@ -228,6 +228,30 @@ with st.sidebar:
         meta_anual = st.number_input("Meta anual (R$)", min_value=0.0,
                                      value=META_PADRAO * 12, step=500.0)
 
+    st.divider()
+    st.markdown(
+        """
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdB87Hl72jAoiRCjVvUwnGnsK14rWTE3MsR45PolapEO6U1OA/viewform"
+           target="_blank"
+           style="
+               display: block;
+               background: #FDB813;
+               color: #4A2C12 !important;
+               -webkit-text-fill-color: #4A2C12 !important;
+               text-align: center;
+               padding: 10px 14px;
+               border-radius: 10px;
+               font-weight: 700;
+               font-size: .95rem;
+               text-decoration: none;
+               box-shadow: 0 4px 10px rgba(0,0,0,.25);
+           ">
+           ➕ Registrar novo atendimento
+        </a>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # ============================================================
 # ABA MENSAL
 # ============================================================
