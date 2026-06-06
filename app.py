@@ -142,7 +142,7 @@ def brl(v: float) -> str:
 def carregar_dados(url: str) -> pd.DataFrame:
     df = pd.read_csv(url)
     df.columns = [str(c).strip().lower() for c in df.columns]
-    for col in ["data", "nome", "sexo", "idade", "Procedimento", "valor"]:
+    for col in ["data", "nome", "sexo", "idade", "Procedimento", "Valor"]:
         if col not in df.columns:
             df[col] = None
     # Aceita AAAA-MM-DD (ISO, sem dayfirst) e DD/MM/AAAA (br, com dayfirst)
@@ -151,14 +151,14 @@ def carregar_dados(url: str) -> pd.DataFrame:
     d_iso = pd.to_datetime(raw[iso], errors="coerce")
     d_br = pd.to_datetime(raw[~iso], errors="coerce", dayfirst=True)
     df["data"] = pd.concat([d_iso, d_br]).reindex(df.index)
-    df["valor"] = (
-        df["valor"].astype(str)
+    df["Valor"] = (
+        df["Valor"].astype(str)
         .str.replace("R$", "", regex=False)
         .str.replace(".", "", regex=False)
         .str.replace(",", ".", regex=False)
         .str.strip()
     )
-    df["valor"] = pd.to_numeric(df["valor"], errors="coerce").fillna(0)
+    df["Valor"] = pd.to_numeric(df["Valor"], errors="coerce").fillna(0)
     for col in ["sexo", "idade", "Procedimento"]:
         df[col] = df[col].astype(str).str.strip().str.lower()
     return df.dropna(subset=["data"])
@@ -241,8 +241,8 @@ if aba_sel == "📅 Mensal":
     dias_corridos = hoje.day if mes_corrente else dias_no_mes
 
     total_clientes = len(dfm)
-    faturamento = dfm["valor"].sum()
-    ticket = dfm["valor"].mean() if total_clientes else 0
+    faturamento = dfm["Valor"].sum()
+    ticket = dfm["Valor"].mean() if total_clientes else 0
     media_diaria = faturamento / dias_corridos if dias_corridos else 0
     projecao_mes = media_diaria * dias_no_mes
     anualizada = faturamento * (12 / mes_num)  # Receita * (12 / mes atual)
@@ -251,12 +251,12 @@ if aba_sel == "📅 Mensal":
     suite_house = faturamento * 0.40
 
     mes_ant = mes - 1
-    fat_ant = df[df["mes_ano"] == mes_ant]["valor"].sum()
+    fat_ant = df[df["mes_ano"] == mes_ant]["Valor"].sum()
     delta = None
     if fat_ant > 0:
         delta = f"{(faturamento - fat_ant) / fat_ant * 100:+.1f}% vs mes anterior"
 
-    por_dia = dfm.groupby(dfm["data"].dt.date)["valor"].sum().sort_index()
+    por_dia = dfm.groupby(dfm["data"].dt.date)["Valor"].sum().sort_index()
     melhor_dia_txt = "—"
     if not por_dia.empty:
         d = por_dia.idxmax()
@@ -339,9 +339,9 @@ if aba_sel == "📅 Mensal":
 
     with g3:
         st.markdown("### Mix de servicos")
-        por_Procedimento = dfm.groupby("Procedimento", as_index=False)["valor"].sum()
+        por_Procedimento = dfm.groupby("Procedimento", as_index=False)["Valor"].sum()
         if not por_Procedimento.empty:
-            rosca = px.pie(por_Procedimento, names="Procedimento", values="valor", hole=0.55,
+            rosca = px.pie(por_Procedimento, names="Procedimento", values="Valor", hole=0.55,
                            color_discrete_sequence=SEQ)
             rosca.update_traces(textinfo="percent+label", textfont_size=12,
                                 textfont_color=MARROM_ESC,
@@ -359,9 +359,9 @@ if aba_sel == "📅 Mensal":
     st.markdown("### 📋 Atendimentos do mes")
 
     # Prepara copia limpa para exibir
-    dfm_tab = dfm[["data", "nome", "sexo", "idade", "Procedimento", "valor"]].copy()
+    dfm_tab = dfm[["data", "nome", "sexo", "idade", "Procedimento", "Valor"]].copy()
     dfm_tab["data"] = dfm_tab["data"].dt.strftime("%d/%m/%Y")
-    dfm_tab["valor_fmt"] = dfm_tab["valor"].apply(brl)
+    dfm_tab["Valor_fmt"] = dfm_tab["Valor"].apply(brl)
 
     # Filtros em linha
     fc1, fc2, fc3, fc4 = st.columns(4)
@@ -389,16 +389,16 @@ if aba_sel == "📅 Mensal":
     if f_nome != "Todos":
         df_filtrado = df_filtrado[df_filtrado["nome"] == f_nome]
 
-    df_exibir = df_filtrado[["data", "nome", "sexo", "idade", "Procedimento", "valor_fmt"]].rename(columns={
+    df_exibir = df_filtrado[["data", "nome", "sexo", "idade", "Procedimento", "Valor_fmt"]].rename(columns={
         "data": "Data",
         "nome": "Cliente",
         "sexo": "Sexo",
         "idade": "Faixa Etaria",
         "Procedimento": "Servico",
-        "valor_fmt": "Valor",
+        "Valor_fmt": "Valor",
     }).reset_index(drop=True)
 
-    total_filtrado = df_filtrado["valor"].sum()
+    total_filtrado = df_filtrado["Valor"].sum()
     n_filtrado = len(df_filtrado)
 
     # CSS da tabela girassol
@@ -495,7 +495,7 @@ else:
         st.warning("Sem dados para o ano selecionado.")
         st.stop()
 
-    fat_anual = dfa["valor"].sum()
+    fat_anual = dfa["Valor"].sum()
     clientes_anual = len(dfa)
     meses_com_dados = dfa["data"].dt.to_period("M").nunique()
     media_mes = fat_anual / meses_com_dados if meses_com_dados else 0
@@ -517,15 +517,15 @@ else:
 
     with r1a:
         st.markdown("### Faturamento por mes")
-        fat_mes = (dfa.groupby(dfa["data"].dt.to_period("M"))["valor"]
+        fat_mes = (dfa.groupby(dfa["data"].dt.to_period("M"))["Valor"]
                    .sum().reset_index())
         fat_mes["mes_label"] = fat_mes["data"].dt.strftime("%b/%y")
-        fig_fat = px.bar(fat_mes, x="mes_label", y="valor",
+        fig_fat = px.bar(fat_mes, x="mes_label", y="Valor",
                          color_discrete_sequence=[DOURADO])
         fig_fat.add_hline(y=meta_anual / 12, line_dash="dash", line_color=FOLHA_ESC,
                           annotation_text="Meta mensal", annotation_font_color=FOLHA_ESC)
         fig_fat.update_traces(marker_line_color=MARROM, marker_line_width=1,
-                              text=fat_mes["valor"].apply(brl), textposition="outside",
+                              text=fat_mes["Valor"].apply(brl), textposition="outside",
                               textfont=dict(color="#2C1A08", size=11))
         st.plotly_chart(layout_plotly(fig_fat, 300), use_container_width=True,
                         config={"displayModeBar": False})
@@ -562,12 +562,12 @@ else:
 
     with r2b:
         st.markdown("### Faturamento por Procedimento de servico")
-        fat_Procedimento = (dfa.groupby("Procedimento")["valor"]
-                    .sum().reset_index().sort_values("valor", ascending=True))
-        fig_fat_Procedimento = px.bar(fat_Procedimento, x="valor", y="Procedimento", orientation="h",
+        fat_Procedimento = (dfa.groupby("Procedimento")["Valor"]
+                    .sum().reset_index().sort_values("Valor", ascending=True))
+        fig_fat_Procedimento = px.bar(fat_Procedimento, x="Valor", y="Procedimento", orientation="h",
                               color_discrete_sequence=[MARROM])
         fig_fat_Procedimento.update_traces(marker_line_color=MARROM_ESC, marker_line_width=1,
-                                   text=fat_Procedimento["valor"].apply(brl), textposition="outside",
+                                   text=fat_Procedimento["Valor"].apply(brl), textposition="outside",
                                    textfont=dict(color="#2C1A08", size=11))
         st.plotly_chart(layout_plotly(fig_fat_Procedimento, 300), use_container_width=True,
                         config={"displayModeBar": False})
@@ -578,10 +578,10 @@ else:
 
     with r3a:
         st.markdown("### Faturamento por servico ao longo do ano")
-        fat_Procedimento_mes = (dfa.groupby([dfa["data"].dt.to_period("M"), "Procedimento"])["valor"]
+        fat_Procedimento_mes = (dfa.groupby([dfa["data"].dt.to_period("M"), "Procedimento"])["Valor"]
                         .sum().reset_index())
         fat_Procedimento_mes["mes_label"] = fat_Procedimento_mes["data"].dt.strftime("%b/%y")
-        fig_stk = px.bar(fat_Procedimento_mes, x="mes_label", y="valor", color="Procedimento",
+        fig_stk = px.bar(fat_Procedimento_mes, x="mes_label", y="Valor", color="Procedimento",
                          barmode="stack", color_discrete_sequence=SEQ)
         fig_stk.update_traces(marker_line_color=CREME, marker_line_width=0.5,
                               texttemplate="%{value:,.0f}", textposition="inside",
@@ -591,8 +591,8 @@ else:
 
     with r3b:
         st.markdown("### Mix anual de servicos")
-        mix_anual = dfa.groupby("Procedimento", as_index=False)["valor"].sum()
-        rosca_anual = px.pie(mix_anual, names="Procedimento", values="valor", hole=0.55,
+        mix_anual = dfa.groupby("Procedimento", as_index=False)["Valor"].sum()
+        rosca_anual = px.pie(mix_anual, names="Procedimento", values="Valor", hole=0.55,
                              color_discrete_sequence=SEQ)
         rosca_anual.update_traces(textinfo="label+value", textfont_size=12,
                                   textfont_color=MARROM_ESC,
