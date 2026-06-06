@@ -142,7 +142,7 @@ def brl(v: float) -> str:
 def carregar_dados(url: str) -> pd.DataFrame:
     df = pd.read_csv(url)
     df.columns = [str(c).strip().lower() for c in df.columns]
-    for col in ["data", "nome", "sexo", "idade", "tipo", "valor"]:
+    for col in ["data", "nome", "sexo", "idade", "procedimento", "valor"]:
         if col not in df.columns:
             df[col] = None
     # Aceita AAAA-MM-DD (ISO, sem dayfirst) e DD/MM/AAAA (br, com dayfirst)
